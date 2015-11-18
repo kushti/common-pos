@@ -8,13 +8,15 @@ case class GenerationRequest(account: Account, right: Long)
 
 object functions {
 
+  val DigestSize = 32
+
   def round(time: Time): Round = ???
 
   def hash(input: Array[Byte]): Array[Byte] =
     MessageDigest
       .getInstance("SHA-256")
       .digest(input)
-      .ensuring(_.length == 32)
+      .ensuring(_.length == DigestSize)
 
   def checkRight(account: Account, raw: BlockLike, round: Round): Option[GenerationRequest] = {
     require(raw.seed.length == SeedLength)
