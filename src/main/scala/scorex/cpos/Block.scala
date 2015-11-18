@@ -17,9 +17,9 @@ case class PreBlock2(epochTime: Time,
                      generator2: Account,
                      override val seed: Array[Byte]) extends BlockLike
 
-//todo: Seq[Account] with retargeting based on a seq size ?
+
 case class Block(epochTime: Time,
-                 generator1: Account,
-                 generator2: Account,
-                 generator3: Account,
+                 generator1: Account, //todo: Seq[Account] with retargeting based on a seq size ?
+                 generator2: Account, //todo: Seq[Account] with retargeting based on a seq size ?
+                 generator3: Account, //todo: Seq[Account] with retargeting based on a seq size ?
                  override val seed: Array[Byte]) extends BlockLike
