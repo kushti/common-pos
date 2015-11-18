@@ -9,6 +9,5 @@ object Simulator {
     val system = ActorSystem()
 
 
-
   }
 }

@@ -6,7 +6,7 @@ import scorex.cpos.TypesAndConstants._
 
 case class GenerationRequest(account: Account, right: Long)
 
-object functions {
+object CposFunctions {
 
   val DigestSize = 32
 
