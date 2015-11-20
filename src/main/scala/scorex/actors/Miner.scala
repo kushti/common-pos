@@ -10,7 +10,7 @@ class Miner extends Actor {
 
   import TypesAndConstants._
 
-  val pk = Array.fill(32)(Random.nextInt(255).toByte)
+  val pk = Array.fill(PubKeyLength)(Random.nextInt(Byte.MaxValue).toByte)
   val blockchain: BlockChain = mutable.IndexedSeq[Block]()
 
   val receipts = mutable.Buffer[NotCompleted]()
@@ -26,8 +26,8 @@ class Miner extends Actor {
     case pb: PreBlock2 =>
       receipts :+ pb
   }
-
 }
+
 
 object MinerSpec {
 
