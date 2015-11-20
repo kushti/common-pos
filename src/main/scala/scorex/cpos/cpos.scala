@@ -23,7 +23,7 @@ object CposFunctions {
 
     round match {
       case FirstRound =>
-        require(raw.isInstanceOf[PreBlock])
+        require(raw.isInstanceOf[Block]) //previous block
 
         val h = hash(raw.seed ++ account.publicKey)
         val first = java.lang.Byte.toUnsignedInt(h.head)

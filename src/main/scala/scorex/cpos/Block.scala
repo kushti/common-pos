@@ -2,11 +2,10 @@ package scorex.cpos
 
 import TypesAndConstants._
 
+//todo: add signatures
 sealed trait BlockLike {
   val seed: Array[Byte]
 }
-
-case class PreBlock(override val seed: Array[Byte]) extends BlockLike
 
 case class PreBlock1(epochTime: Time,
                      generator1: Account,

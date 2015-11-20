@@ -1,6 +1,6 @@
 package scorex.simulation
 
-import akka.actor.{ActorRef, Props, Actor, ActorSystem}
+import akka.actor.{Props, Actor, ActorSystem}
 import scorex.actors.Miner
 
 trait Event
@@ -24,25 +24,19 @@ class Simulator extends Actor {
   override def receive = {
     case NewTick =>
       time = time + 1
-
-
   }
 }
 
 object SimulatorSpec {
-
   case object NewTick
-
-
 }
 
 
 object SimulatorLauncher {
 
   def main(args: Array[String]): Unit = {
-
     val system = ActorSystem()
 
-
+    val simulator = system.actorOf(Props[Simulator])
   }
 }
