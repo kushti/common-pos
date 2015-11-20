@@ -24,3 +24,12 @@ case class Block(time: Time,
                  generator2: Account, //todo: Seq[Account] with retargeting based on a seq size ?
                  generator3: Account, //todo: Seq[Account] with retargeting based on a seq size ?
                  override val seed: Array[Byte]) extends BlockLike
+
+object GenesisCreator extends Account(0, Array.fill(PubKeyLength)(0))
+
+object GenesisBlock extends Block(0L,
+  generator1 = GenesisCreator,
+  generator2 = GenesisCreator,
+  generator3 = GenesisCreator,
+  seed = Array.fill(SeedLength)(0)
+)
