@@ -9,3 +9,7 @@ class Miner extends Actor {
   }
 
 }
+
+object MinerSpec {
+
+}

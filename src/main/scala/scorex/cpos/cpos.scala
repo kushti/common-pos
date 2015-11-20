@@ -25,7 +25,7 @@ object CposFunctions {
       case FirstRound =>
         require(raw.isInstanceOf[PreBlock])
 
-        val h = hash(account.publicKey ++ raw.seed)
+        val h = hash(raw.seed ++ account.publicKey)
         val first = java.lang.Byte.toUnsignedInt(h.head)
 
         first < 64 match {
@@ -38,7 +38,22 @@ object CposFunctions {
         }
 
       case SecondRound =>
-        ???
+        raw match{
+          case PreBlock1(time, gen1, seed) =>
+            val h = hash(seed ++ gen1.publicKey ++ account.publicKey)
+            val first = java.lang.Byte.toUnsignedInt(h.head)
+
+            first < 64 match {
+              case true =>
+                val r = account.balance * first
+                Some(GenerationRequest(account, r))
+
+              case false =>
+                None
+            }
+
+          case _ => None
+        }
 
       case ThirdRound =>
         ???
@@ -46,8 +61,6 @@ object CposFunctions {
   }
 
   def generate() = ???
-
-
 }
 
 
