@@ -13,6 +13,8 @@ class Miner extends Actor {
   val pk = Array.fill(PubKeyLength)(Random.nextInt(Byte.MaxValue).toByte)
   val blockchain: BlockChain = mutable.IndexedSeq[Block](GenesisBlock)
 
+  lazy val id = pk.take(2).mkString("")
+
   val receipts = mutable.Buffer[NotCompleted]()
   val ownReceipts = mutable.Buffer[NotCompleted]()
 
@@ -27,7 +29,7 @@ class Miner extends Actor {
     case pb: PreBlock2 =>
       receipts :+ pb
 
-    case TimerUpdate(time) =>
+    case TimerUpdate(time) => println("id: " + id + "  time: " + time)
 
   }
 }

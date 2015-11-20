@@ -1,7 +1,10 @@
 package scorex.simulation
 
 import akka.actor.{Props, Actor, ActorSystem}
-import scorex.actors.Miner
+import scorex.actors.{MinerSpec, Miner}
+import scorex.simulation.SimulatorSpec.NewTick
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 trait Event
 
@@ -24,6 +27,7 @@ class Simulator extends Actor {
   override def receive = {
     case NewTick =>
       time = time + 1
+      miners.foreach(ref => ref ! MinerSpec.TimerUpdate(time))
   }
 }
 
@@ -38,5 +42,6 @@ object SimulatorLauncher {
     val system = ActorSystem()
 
     val simulator = system.actorOf(Props[Simulator])
+    system.scheduler.schedule(0.seconds, 50.millis)(simulator ! NewTick)
   }
 }
