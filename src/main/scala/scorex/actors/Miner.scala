@@ -1,7 +1,7 @@
 package scorex.actors
 
 import akka.actor.Actor
-import scorex.cpos.{Block, NotCompleted, PreBlock1, PreBlock2, TypesAndConstants}
+import scorex.cpos._
 
 import scala.collection.mutable
 import scala.util.Random
@@ -11,7 +11,7 @@ class Miner extends Actor {
   import TypesAndConstants._
 
   val pk = Array.fill(PubKeyLength)(Random.nextInt(Byte.MaxValue).toByte)
-  val blockchain: BlockChain = mutable.IndexedSeq[Block]()
+  val blockchain: BlockChain = mutable.IndexedSeq[Block](GenesisBlock)
 
   val receipts = mutable.Buffer[NotCompleted]()
   val ownReceipts = mutable.Buffer[NotCompleted]()

@@ -6,11 +6,16 @@ import scorex.cpos.TypesAndConstants._
 
 case class GenerationRequest(account: Account, right: Long)
 
+
 object CposFunctions {
+
+  import com.github.nscala_time.time.Imports._
 
   val DigestSize = 32
 
-  def round(time: Time): Round = ???
+  def round(lastBlock: Block, time: Time): Round = {
+    ???
+  }
 
   def hash(input: Array[Byte]): Array[Byte] =
     MessageDigest
@@ -38,7 +43,7 @@ object CposFunctions {
         }
 
       case SecondRound =>
-        raw match{
+        raw match {
           case PreBlock1(time, gen1, seed) =>
             val h = hash(seed ++ gen1.publicKey ++ account.publicKey)
             val first = java.lang.Byte.toUnsignedInt(h.head)
@@ -62,5 +67,3 @@ object CposFunctions {
 
   def generate() = ???
 }
-
-
