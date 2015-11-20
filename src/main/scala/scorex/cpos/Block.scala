@@ -9,17 +9,17 @@ sealed trait BlockLike {
 
 trait NotCompleted extends BlockLike
 
-case class PreBlock1(epochTime: Time,
+case class PreBlock1(time: Time,
                      generator1: Account,
                      override val seed: Array[Byte]) extends BlockLike with NotCompleted
 
-case class PreBlock2(epochTime: Time,
+case class PreBlock2(time: Time,
                      generator1: Account,
                      generator2: Account,
                      override val seed: Array[Byte]) extends BlockLike with NotCompleted
 
 
-case class Block(epochTime: Time,
+case class Block(time: Time,
                  generator1: Account, //todo: Seq[Account] with retargeting based on a seq size ?
                  generator2: Account, //todo: Seq[Account] with retargeting based on a seq size ?
                  generator3: Account, //todo: Seq[Account] with retargeting based on a seq size ?
