@@ -4,7 +4,7 @@ object TypesAndConstants{
   type Time = Long
   type PublicKey = Array[Byte]
 
-  type BlockChain = List[Block]
+  type BlockChain = IndexedSeq[Block]
 
   val SeedLength = 32
   val PubKeyLength = 32

@@ -7,14 +7,16 @@ sealed trait BlockLike {
   val seed: Array[Byte]
 }
 
+trait NotCompleted extends BlockLike
+
 case class PreBlock1(epochTime: Time,
                      generator1: Account,
-                     override val seed: Array[Byte]) extends BlockLike
+                     override val seed: Array[Byte]) extends BlockLike with NotCompleted
 
 case class PreBlock2(epochTime: Time,
                      generator1: Account,
                      generator2: Account,
-                     override val seed: Array[Byte]) extends BlockLike
+                     override val seed: Array[Byte]) extends BlockLike with NotCompleted
 
 
 case class Block(epochTime: Time,
