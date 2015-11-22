@@ -9,12 +9,13 @@ case class GenerationRequest(account: Account, right: Long)
 
 object CposFunctions {
 
-  import com.github.nscala_time.time.Imports._
-
   val DigestSize = 32
 
-  def round(lastBlock: Block, time: Time): Round = {
-    ???
+  def round(lastBlock: Block, time: Time): Option[Round] = {
+    time - lastBlock.time > 30 match {
+      case true => Some(FirstRound)
+      case false => None
+    }
   }
 
   def hash(input: Array[Byte]): Array[Byte] =
@@ -32,10 +33,12 @@ object CposFunctions {
 
         val h = hash(raw.seed ++ account.publicKey)
         val first = java.lang.Byte.toUnsignedInt(h.head)
+        val second = java.lang.Byte.toUnsignedInt(h.tail.head)
+        val third = java.lang.Byte.toUnsignedInt(h.tail.tail.head)
 
-        first < 64 match {
+        first < 32 match {
           case true =>
-            val r = account.balance * first
+            val r = account.balance * first * second * third
             Some(GenerationRequest(account, r))
 
           case false =>
@@ -47,10 +50,11 @@ object CposFunctions {
           case PreBlock1(time, gen1, seed) =>
             val h = hash(seed ++ gen1.publicKey ++ account.publicKey)
             val first = java.lang.Byte.toUnsignedInt(h.head)
+            val second = java.lang.Byte.toUnsignedInt(h.tail.head)
 
-            first < 64 match {
+            first < 32 match {
               case true =>
-                val r = account.balance * first
+                val r = account.balance * first * second
                 Some(GenerationRequest(account, r))
 
               case false =>
