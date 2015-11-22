@@ -11,9 +11,15 @@ object CposFunctions {
 
   val DigestSize = 32
 
+  // if > 30 seconds after lastBlock - first Round
+  // if > 90 seconds after lastBlock - third round
   def round(lastBlock: Block, time: Time): Option[Round] = {
     time - lastBlock.time > 30 match {
-      case true => Some(FirstRound)
+      case true =>
+        time - lastBlock.time > 90 match {
+          case true => Some(ThirdRound)
+          case false => Some(FirstRound)
+        }
       case false => None
     }
   }
