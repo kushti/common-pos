@@ -31,7 +31,6 @@ object CposFunctions {
       .ensuring(_.length == DigestSize)
 
 
-
   def checkRight(account: Account, raw: BlockLike, round: Round): Option[GenerationRequest] = {
     require(raw.seed.length == SeedLength)
 

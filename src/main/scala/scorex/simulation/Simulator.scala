@@ -1,9 +1,10 @@
 package scorex.simulation
 
-import akka.actor.{ActorLogging, Props, Actor, ActorSystem}
-import scorex.actors.{MinerSpec, Miner}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import scorex.actors.{Miner, MinerSpec}
 import scorex.cpos.GenerationRequest
 import scorex.simulation.SimulatorSpec.NewTick
+
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -33,7 +34,7 @@ class Simulator extends Actor with ActorLogging {
       time = time + 1
       miners.foreach(ref => ref ! MinerSpec.TimerUpdate(time))
 
-    case gr:GenerationRequest =>
+    case gr: GenerationRequest =>
       grs += gr.right -> gr
       log.info("Best ticket: " + grs.maxBy(_._1))
       log.info("size: " + grs.size + " others: " + grs)
@@ -41,7 +42,9 @@ class Simulator extends Actor with ActorLogging {
 }
 
 object SimulatorSpec {
+
   case object NewTick
+
 }
 
 
