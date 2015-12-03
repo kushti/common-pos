@@ -1,2 +1,2 @@
 # common-pos
-Proof-of-Common-Stake paper
+Simulation code for a Proof-of-Common-Stake paper(to be published soon)
