@@ -30,6 +30,8 @@ object CposFunctions {
       .digest(input)
       .ensuring(_.length == DigestSize)
 
+
+
   def checkRight(account: Account, raw: BlockLike, round: Round): Option[GenerationRequest] = {
     require(raw.seed.length == SeedLength)
 
@@ -38,13 +40,13 @@ object CposFunctions {
         require(raw.isInstanceOf[Block]) //previous block
 
         val h = hash(raw.seed ++ account.publicKey)
-        val first = java.lang.Byte.toUnsignedInt(h.head)
-        val second = java.lang.Byte.toUnsignedInt(h.tail.head)
-        val third = java.lang.Byte.toUnsignedInt(h.tail.tail.head)
+        val firstByte = java.lang.Byte.toUnsignedInt(h.head)
+        val secondByte = java.lang.Byte.toUnsignedInt(h.tail.head)
+        val thirdByte = java.lang.Byte.toUnsignedInt(h.tail.tail.head)
 
-        first < 32 match {
+        firstByte < 32 match {
           case true =>
-            val r = account.balance * first * second * third
+            val r = account.balance * firstByte * secondByte * thirdByte
             Some(GenerationRequest(account, r))
 
           case false =>
@@ -70,8 +72,8 @@ object CposFunctions {
           case _ => None
         }
 
-      case ThirdRound =>
-        ???
+      case ThirdRound => ???
+
     }
   }
 

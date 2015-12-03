@@ -2,13 +2,14 @@ package scorex.actors
 
 import java.security.SecureRandom
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorLogging}
 import scorex.cpos._
 
 import scala.collection.mutable
 import scala.util.Random
 
-class Miner extends Actor {
+class Miner extends Actor with ActorLogging {
+
   import CposFunctions._
   import MinerSpec._
   import TypesAndConstants._
@@ -18,6 +19,7 @@ class Miner extends Actor {
     new SecureRandom().nextBytes(bytes)
     bytes
   }
+
   val blockchain: BlockChain = mutable.IndexedSeq[Block](GenesisBlock)
 
   val acc = new Account(Random.nextInt(1000000), pk)
@@ -42,12 +44,14 @@ class Miner extends Actor {
       val r = round(blockchain.last, time)
 
       val grOpt = r.flatMap(v => checkRight(acc, blockchain.last, v))
-      println("id: " + id + "  time: " + time + "  gr: " + grOpt)
+      log.info("id: " + id + "  time: " + time + "  gr: " + grOpt)
       grOpt.foreach(gr => sender() ! gr)
   }
 }
 
 
 object MinerSpec {
-  case class TimerUpdate(time:Long)
+
+  case class TimerUpdate(time: Long)
+
 }

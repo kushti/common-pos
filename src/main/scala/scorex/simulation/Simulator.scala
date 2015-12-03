@@ -1,6 +1,6 @@
 package scorex.simulation
 
-import akka.actor.{Props, Actor, ActorSystem}
+import akka.actor.{ActorLogging, Props, Actor, ActorSystem}
 import scorex.actors.{MinerSpec, Miner}
 import scorex.cpos.GenerationRequest
 import scorex.simulation.SimulatorSpec.NewTick
@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 trait Event
 
 
-class Simulator extends Actor {
+class Simulator extends Actor with ActorLogging {
 
   import SimulatorSpec._
 
@@ -35,8 +35,8 @@ class Simulator extends Actor {
 
     case gr:GenerationRequest =>
       grs += gr.right -> gr
-      println("Best ticket: " + grs.maxBy(_._1))
-      println("size: " + grs.size + " others: " + grs)
+      log.info("Best ticket: " + grs.maxBy(_._1))
+      log.info("size: " + grs.size + " others: " + grs)
   }
 }
 
