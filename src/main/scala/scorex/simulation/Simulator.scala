@@ -2,7 +2,7 @@ package scorex.simulation
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import scorex.actors.{Miner, MinerSpec}
-import scorex.cpos.GenerationRequest
+import scorex.cpos.{Block, Ticket}
 import scorex.simulation.SimulatorSpec.NewTick
 
 import scala.collection.mutable
@@ -18,26 +18,29 @@ class Simulator extends Actor with ActorLogging {
 
   var time = 0
 
-  val MaxDelta = 10
+  //val MaxDelta = 10
 
   val MinersCount = 100
 
-  val packetsLossPercentage = 1
+  //val packetsLossPercentage = 1
 
   //todo: pass delta?
   val miners = 1.to(100).toSeq.map(_ => context.system.actorOf(Props[Miner]))
 
-  val grs = mutable.Map[Long, GenerationRequest]()
+  val grs = mutable.Buffer[Ticket]()
 
   override def receive = {
     case NewTick =>
       time = time + 1
       miners.foreach(ref => ref ! MinerSpec.TimerUpdate(time))
 
-    case gr: GenerationRequest =>
-      grs += gr.right -> gr
-      log.info("Best ticket: " + grs.maxBy(_._1))
+    case t: Ticket =>
+      grs += t
+      log.info("Best ticket: " + grs.maxBy(_.right))
       log.info("size: " + grs.size + " others: " + grs)
+
+    case b: Block =>
+
   }
 }
 

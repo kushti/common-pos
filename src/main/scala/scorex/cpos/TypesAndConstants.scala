@@ -6,6 +6,6 @@ object TypesAndConstants{
 
   type BlockChain = IndexedSeq[Block]
 
-  val SeedLength = 32
+  val PuzLength = HashImpl.DigestSize
   val PubKeyLength = 32
 }

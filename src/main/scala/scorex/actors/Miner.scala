@@ -9,8 +9,6 @@ import scala.collection.mutable
 import scala.util.Random
 
 class Miner extends Actor with ActorLogging {
-
-  import CposFunctions._
   import MinerSpec._
   import TypesAndConstants._
 
@@ -20,32 +18,31 @@ class Miner extends Actor with ActorLogging {
     bytes
   }
 
-  val blockchain: BlockChain = mutable.IndexedSeq[Block](GenesisBlock)
+  val blockchain: BlockChain = mutable.IndexedSeq[Block](GenesisBlock, GenesisBlock, GenesisBlock)
 
   val acc = new Account(Random.nextInt(1000000), pk)
 
-  lazy val id = pk.take(2).mkString("")
+  lazy val id = pk.take(3).mkString("")
 
-  val receipts = mutable.Buffer[NotCompleted]()
-  val ownReceipts = mutable.Buffer[NotCompleted]()
+  val ticket1s = mutable.Buffer[Ticket]()
+  val ticket2s = mutable.Buffer[Ticket]()
+  val ticket3s = mutable.Buffer[Ticket]()
+
+  val ownReceipts = mutable.Buffer[Ticket]()
 
   override def receive = {
+    case t1: Ticket1 =>
+      ticket1s += t1
+
+    case t2: Ticket2 =>
+      ticket2s += t2
+
     case b: Block =>
       blockchain :+ b
-      receipts.clear()
 
-    case pb: PreBlock1 =>
-      receipts :+ pb
-
-    case pb: PreBlock2 =>
-      receipts :+ pb
 
     case TimerUpdate(time) =>
-      val r = round(blockchain.last, time)
 
-      val grOpt = r.flatMap(v => checkRight(acc, blockchain.last, v))
-      log.info("id: " + id + "  time: " + time + "  gr: " + grOpt)
-      grOpt.foreach(gr => sender() ! gr)
   }
 }
 
