@@ -28,8 +28,6 @@ class Miner extends Actor with ActorLogging {
   val ticket2s = mutable.Buffer[Ticket]()
   val ticket3s = mutable.Buffer[Ticket]()
 
-  val ownReceipts = mutable.Buffer[Ticket]()
-
   override def receive = {
     case t1: Ticket1 =>
       ticket1s += t1
