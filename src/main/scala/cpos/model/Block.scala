@@ -1,4 +1,4 @@
-package scorex.cpos
+package cpos.model
 
 import TypesAndConstants._
 

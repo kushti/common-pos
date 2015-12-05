@@ -1,9 +1,9 @@
-package scorex.actors
+package cpos.actors
 
 import java.security.SecureRandom
 
 import akka.actor.{Actor, ActorLogging}
-import scorex.cpos._
+import cpos.model._
 
 import scala.collection.mutable
 import scala.util.Random

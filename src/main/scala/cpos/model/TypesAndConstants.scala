@@ -1,4 +1,6 @@
-package scorex.cpos
+package cpos.model
+
+import cpos.util.HashImpl
 
 object TypesAndConstants{
   type Time = Long

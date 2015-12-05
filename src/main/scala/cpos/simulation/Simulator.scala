@@ -1,9 +1,9 @@
-package scorex.simulation
+package cpos.simulation
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
-import scorex.actors.{Miner, MinerSpec}
-import scorex.cpos.{Block, Ticket}
-import scorex.simulation.SimulatorSpec.NewTick
+import cpos.actors.{Miner, MinerSpec}
+import cpos.model.{Block, Ticket}
+import cpos.simulation.SimulatorSpec.NewTick
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global

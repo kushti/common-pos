@@ -1,20 +1,9 @@
-package scorex.cpos
+package cpos.model
 
-import java.security.MessageDigest
-
-object HashImpl {
-  val DigestSize = 32
-
-  def hash(input: Array[Byte]): Array[Byte] =
-    MessageDigest
-      .getInstance("SHA-256")
-      .digest(input)
-      .ensuring(_.length == DigestSize)
-}
+import cpos.util.HashImpl.hash
 
 sealed trait Ticket {
 
-  import HashImpl.hash
 
   val puz: Array[Byte]
   val account: Account
