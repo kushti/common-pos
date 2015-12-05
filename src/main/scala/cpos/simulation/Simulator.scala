@@ -5,7 +5,6 @@ import cpos.actors.{Miner, MinerSpec}
 import cpos.model.{Block, Ticket}
 import cpos.simulation.SimulatorSpec.NewTick
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -25,9 +24,7 @@ class Simulator extends Actor with ActorLogging {
   //val packetsLossPercentage = 1
 
   //todo: pass delta?
-  val miners = 1.to(100).toSeq.map(_ => context.system.actorOf(Props[Miner]))
-
-  val grs = mutable.Buffer[Ticket]()
+  val miners = 1.to(100).toSeq.map(_ => context.system.actorOf(Props(classOf[Miner], self)))
 
   override def receive = {
     case NewTick =>
@@ -35,12 +32,11 @@ class Simulator extends Actor with ActorLogging {
       miners.foreach(ref => ref ! MinerSpec.TimerUpdate(time))
 
     case t: Ticket =>
-      grs += t
-      log.info("Best ticket: " + grs.maxBy(_.right))
-      log.info("size: " + grs.size + " others: " + grs)
+      miners.foreach(ref => ref ! t)
 
     case b: Block =>
-
+      log.info("New block: "+b)
+      miners.foreach(ref => ref ! b)
   }
 }
 
