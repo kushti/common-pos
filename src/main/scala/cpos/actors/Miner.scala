@@ -96,6 +96,9 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
             log.error("No tickets found")
         }
       }
+
+    case nonsense: Any =>
+      log.warning(s"Got strange input: $nonsense")
   }
 }
 

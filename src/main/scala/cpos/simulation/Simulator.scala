@@ -29,6 +29,7 @@ class Simulator extends Actor with ActorLogging {
   override def receive = {
     case NewTick =>
       time = time + 1
+      log.info(s"Time $time, going to inform miners about clocks update")
       miners.foreach(ref => ref ! MinerSpec.TimerUpdate(time))
 
     case t: Ticket =>
@@ -37,6 +38,9 @@ class Simulator extends Actor with ActorLogging {
     case b: Block =>
       log.info("New block: "+b)
       miners.foreach(ref => ref ! b)
+
+    case nonsense: Any =>
+      log.warning(s"Got strange input: $nonsense")
   }
 }
 
