@@ -4,7 +4,6 @@ import cpos.util.HashImpl.hash
 
 sealed trait Ticket {
 
-
   val puz: Array[Byte]
   val account: Account
   val right: Long

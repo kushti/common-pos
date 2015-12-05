@@ -1,11 +1,8 @@
 package cpos.model
 
-import TypesAndConstants._
+import cpos.model.TypesAndConstants._
 
-//todo: add signatures
-
-
-
+//todo: add signatures?
 case class Block(time: Time,
                  puz: Array[Byte],
                  ticket1: Ticket, //todo: Seq[Account] with retargeting based on a seq size ?
@@ -14,7 +11,6 @@ case class Block(time: Time,
                  generator: Account)
 
 object GenesisCreator extends Account(0, Array.fill(PubKeyLength)(0))
-
 
 object GenesisTicket1 extends Ticket1(Array.fill(PuzLength)(0), GenesisCreator, 0L)
 object GenesisTicket2 extends Ticket2(Array.fill(PuzLength)(0), GenesisCreator, 0L)
