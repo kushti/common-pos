@@ -19,7 +19,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
     bytes
   }
 
-  val blockchain: BlockChain = mutable.IndexedSeq[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
+  val blockchain: BlockChain = mutable.Buffer[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
 
   val acc = new Account(new SecureRandom().nextInt(1000000), pk)
 
@@ -34,7 +34,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
   private def generateTickets(): Unit ={
     val ticket1Block = blockchain(blockchain.size - 3)
     val ticket2Block = blockchain(blockchain.size - 2)
-    val ticket3Block = blockchain(blockchain.size - 1)
+    val ticket3Block = blockchain.last
 
     val ticket1Candidate = Ticket1(ticket1Block.puz, acc)
     val ticket2Candidate = Ticket2(ticket2Block.puz, acc)
@@ -78,7 +78,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
       }
 
     case b: Block =>
-      blockchain :+ b
+      blockchain += b
       ticket1s.clear()
       ticket2s.clear()
       ticket3s.clear()

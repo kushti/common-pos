@@ -6,7 +6,7 @@ object TypesAndConstants{
   type Time = Long
   type PublicKey = Array[Byte]
 
-  type BlockChain = IndexedSeq[Block]
+  type BlockChain = scala.collection.mutable.Buffer[Block]
 
   val PuzLength = HashImpl.DigestSize
   val PubKeyLength = 32
