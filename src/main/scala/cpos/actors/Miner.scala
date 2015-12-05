@@ -87,8 +87,8 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
         val t1Puz = blockchain(blockchain.size - 3).puz
         val t2Puz = blockchain(blockchain.size - 2).puz
 
-        val t1Opt = Try(ticket1s.filter(_.puz.sameElements(t1Puz)).maxBy(_.score)).toOption
-        val t2Opt = Try(ticket2s.filter(_.puz.sameElements(t2Puz)).maxBy(_.score)).toOption
+        val t1Opt = Try(ticket1s.filter(_.blockPuz.sameElements(t1Puz)).maxBy(_.score)).toOption
+        val t2Opt = Try(ticket2s.filter(_.blockPuz.sameElements(t2Puz)).maxBy(_.score)).toOption
 
         (t1Opt, t2Opt) match {
           case (Some(t1), Some(t2)) =>
@@ -101,6 +101,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
             val newBlock = Block(time, newPuz, t1, t2, ownWinningTicket.get, acc)
             environment ! newBlock
+            ownWinningTicket = None
 
           case _ =>
             log.error("No tickets found")
