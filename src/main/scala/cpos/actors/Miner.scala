@@ -31,6 +31,39 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
   private var ownWinningTicket: Option[Ticket3] = None
 
+  private def generateTickets(): Unit ={
+    val ticket1Block = blockchain(blockchain.size - 3)
+    val ticket2Block = blockchain(blockchain.size - 2)
+    val ticket3Block = blockchain(blockchain.size - 1)
+
+    val ticket1Candidate = Ticket1(ticket1Block.puz, acc)
+    val ticket2Candidate = Ticket2(ticket2Block.puz, acc)
+    val ticket3Candidate = Ticket3(ticket3Block.puz, acc)
+
+    if (ticket1Candidate.score > 0) {
+      log.info(s"Generated ticket1: $ticket1Candidate")
+      ticket1s += ticket1Candidate
+      environment ! ticket1Candidate
+    }
+
+    if (ticket2Candidate.score > 0) {
+      log.info(s"Generated ticket2: $ticket2Candidate")
+      ticket2s += ticket2Candidate
+      environment ! ticket2Candidate
+    }
+
+    if (ticket3Candidate.score > 0) {
+      log.info(s"Generated ticket3: $ticket3Candidate")
+      ticket3s += ticket3Candidate
+      environment ! ticket3Candidate
+      ownWinningTicket = Some(ticket3Candidate)
+    }
+  }
+
+  override def preStart = {
+    generateTickets()
+  }
+
   override def receive = {
     case t1: Ticket1 =>
       ticket1s += t1
@@ -46,30 +79,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
     case b: Block =>
       blockchain :+ b
-
-      val ticket1Block = blockchain(blockchain.size - 3)
-      val ticket2Block = blockchain(blockchain.size - 2)
-      val ticket3Block = blockchain(blockchain.size - 1)
-
-      val ticket1Candidate = Ticket1(ticket1Block.puz, acc)
-      val ticket2Candidate = Ticket2(ticket2Block.puz, acc)
-      val ticket3Candidate = Ticket3(ticket3Block.puz, acc)
-
-      if (ticket1Candidate.score > 0) {
-        ticket1s += ticket1Candidate
-        environment ! ticket1Candidate
-      }
-
-      if (ticket2Candidate.score > 0) {
-        ticket2s += ticket2Candidate
-        environment ! ticket2Candidate
-      }
-
-      if (ticket3Candidate.score > 0) {
-        ticket3s += ticket3Candidate
-        environment ! ticket3Candidate
-        ownWinningTicket = Some(ticket3Candidate)
-      }
+      generateTickets()
 
     case TimerUpdate(time) =>
       val lastBlock = blockchain.last
