@@ -36,7 +36,7 @@ class Simulator extends Actor with ActorLogging {
       miners.foreach(ref => ref ! t)
 
     case b: Block =>
-      log.info("New block: "+b)
+      log.info("New block: " + b)
       miners.foreach(ref => ref ! b)
 
     case nonsense: Any =>

@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import cpos.model._
 
 import scala.collection.mutable
-import scala.util.{Random, Try}
+import scala.util.Try
 
 class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
@@ -19,9 +19,9 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
     bytes
   }
 
-  val blockchain: BlockChain = mutable.IndexedSeq[Block](GenesisBlock, GenesisBlock, GenesisBlock)
+  val blockchain: BlockChain = mutable.IndexedSeq[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
 
-  val acc = new Account(Random.nextInt(1000000), pk)
+  val acc = new Account(new SecureRandom().nextInt(1000000), pk)
 
   lazy val id = pk.take(3).mkString("")
 
@@ -41,19 +41,19 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
     val ticket3Candidate = Ticket3(ticket3Block.puz, acc)
 
     if (ticket1Candidate.score > 0) {
-      log.info(s"Generated ticket1: $ticket1Candidate")
+     // log.info(s"Generated ticket1: $ticket1Candidate")
       ticket1s += ticket1Candidate
       environment ! ticket1Candidate
     }
 
     if (ticket2Candidate.score > 0) {
-      log.info(s"Generated ticket2: $ticket2Candidate")
+  //    log.info(s"Generated ticket2: $ticket2Candidate")
       ticket2s += ticket2Candidate
       environment ! ticket2Candidate
     }
 
     if (ticket3Candidate.score > 0) {
-      log.info(s"Generated ticket3: $ticket3Candidate")
+  //    log.info(s"Generated ticket3: $ticket3Candidate")
       ticket3s += ticket3Candidate
       environment ! ticket3Candidate
       ownWinningTicket = Some(ticket3Candidate)
@@ -79,6 +79,9 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
     case b: Block =>
       blockchain :+ b
+      ticket1s.clear()
+      ticket2s.clear()
+      ticket3s.clear()
       generateTickets()
 
     case TimerUpdate(time) =>
@@ -99,7 +102,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
                 t2.account.publicKey ++
                 ownWinningTicket.get.account.publicKey
 
-            val newBlock = Block(time, newPuz, t1, t2, ownWinningTicket.get, acc)
+            val newBlock = Block(lastBlock.height+1, time, newPuz, t1, t2, ownWinningTicket.get, acc)
             environment ! newBlock
             ownWinningTicket = None
 

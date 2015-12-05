@@ -3,7 +3,8 @@ package cpos.model
 import cpos.model.TypesAndConstants._
 
 //todo: add signatures?
-case class Block(time: Time,
+case class Block(height:Int,
+                 time: Time,
                  puz: Array[Byte],
                  ticket1: Ticket, //todo: Seq[Account] with retargeting based on a seq size ?
                  ticket2: Ticket, //todo: Seq[Account] with retargeting based on a seq size ?
@@ -20,7 +21,9 @@ object GenesisTicket2 extends Ticket2(Array.fill(PuzLength)(0), GenesisCreator)
 
 object GenesisTicket3 extends Ticket3(Array.fill(PuzLength)(0), GenesisCreator)
 
-object GenesisBlock extends Block(0L,
+class GenesisBlock(override val height:Int) extends Block(
+  height,
+  0L,
   puz = Array.fill(PuzLength)(0),
   ticket1 = GenesisTicket1,
   ticket2 = GenesisTicket2,
