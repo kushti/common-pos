@@ -31,7 +31,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
   private var ownWinningTicket: Option[Ticket3] = None
 
-  private def generateTickets(): Unit ={
+  private def generateTickets(): Unit = {
     val ticket1Block = blockchain(blockchain.size - 3)
     val ticket2Block = blockchain(blockchain.size - 2)
     val ticket3Block = blockchain.last
@@ -41,19 +41,19 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
     val ticket3Candidate = Ticket3(ticket3Block.puz, acc)
 
     if (ticket1Candidate.score > 0) {
-     // log.info(s"Generated ticket1: $ticket1Candidate")
+      // log.info(s"Generated ticket1: $ticket1Candidate")
       ticket1s += ticket1Candidate
       environment ! ticket1Candidate
     }
 
     if (ticket2Candidate.score > 0) {
-  //    log.info(s"Generated ticket2: $ticket2Candidate")
+      //    log.info(s"Generated ticket2: $ticket2Candidate")
       ticket2s += ticket2Candidate
       environment ! ticket2Candidate
     }
 
     if (ticket3Candidate.score > 0) {
-  //    log.info(s"Generated ticket3: $ticket3Candidate")
+      //    log.info(s"Generated ticket3: $ticket3Candidate")
       ticket3s += ticket3Candidate
       environment ! ticket3Candidate
       ownWinningTicket = Some(ticket3Candidate)
@@ -61,6 +61,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
   }
 
   override def preStart = {
+    log.info(s"balance: " + acc.balance)
     generateTickets()
   }
 
@@ -102,7 +103,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
                 t2.account.publicKey ++
                 ownWinningTicket.get.account.publicKey
 
-            val newBlock = Block(lastBlock.height+1, time, newPuz, t1, t2, ownWinningTicket.get, acc)
+            val newBlock = Block(lastBlock.height + 1, time, newPuz, t1, t2, ownWinningTicket.get, acc)
             environment ! newBlock
             ownWinningTicket = None
 
@@ -111,6 +112,15 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
         }
       }
 
+    case AnalyzeChain =>
+      val tickets:Seq[Ticket] = blockchain.drop(3).flatMap(b => Seq(b.ticket1, b.ticket2, b.ticket3))
+      //out balance -> number of tickets
+      println(tickets.map(t => t.account -> t.score).groupBy(_._1).map{case (a, s)=>
+        a.balance -> s.map(_._2).size
+      }.toSeq.sortBy(_._1))
+      context.system.terminate()
+
+
     case nonsense: Any =>
       log.warning(s"Got strange input: $nonsense")
   }
@@ -118,6 +128,8 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
 
 object MinerSpec {
+
+  case object AnalyzeChain
 
   case class TimerUpdate(time: Long)
 

@@ -17,6 +17,8 @@ class Simulator extends Actor with ActorLogging {
 
   var time = 0
 
+  val EndTime = 50000
+
   //val MaxDelta = 10
 
   val MinersCount = 100
@@ -28,9 +30,14 @@ class Simulator extends Actor with ActorLogging {
 
   override def receive = {
     case NewTick =>
-      time = time + 1
-      log.info(s"Time $time, going to inform miners about clocks update")
-      miners.foreach(ref => ref ! MinerSpec.TimerUpdate(time))
+      time == EndTime match {
+        case true =>
+          miners.head ! MinerSpec.AnalyzeChain
+        case false =>
+          time = time + 1
+          log.info(s"Time $time, going to inform miners about clocks update")
+          miners.foreach(ref => ref ! MinerSpec.TimerUpdate(time))
+      }
 
     case t: Ticket =>
       miners.foreach(ref => ref ! t)
