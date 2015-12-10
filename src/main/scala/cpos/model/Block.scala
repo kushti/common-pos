@@ -10,7 +10,7 @@ case class Block(height:Int,
                  ticket2: Ticket, //todo: Seq[Account] with retargeting based on a seq size ?
                  ticket3: Ticket,
                  generator: Account) {
-  lazy val score: BigInt = BigInt(ticket1.score) * ticket2.score * ticket3.score
+  lazy val score: BigInt = ticket1.score + ticket2.score + ticket3.score
 }
 
 object GenesisCreator extends Account(0, Array.fill(PubKeyLength)(0))

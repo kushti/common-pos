@@ -17,7 +17,7 @@ class Simulator extends Actor with ActorLogging {
 
   var time = 0
 
-  val EndTime = 50000
+  val EndTime = 5000
 
   //val MaxDelta = 10
 
@@ -64,6 +64,6 @@ object SimulatorLauncher {
     val system = ActorSystem()
 
     val simulator = system.actorOf(Props[Simulator])
-    system.scheduler.schedule(0.seconds, 50.millis)(simulator ! NewTick)
+    system.scheduler.schedule(0.seconds, 25.millis)(simulator ! NewTick)
   }
 }

@@ -9,9 +9,9 @@ sealed trait Ticket {
 
   val byteNum: Byte
 
-  lazy val score: Long = {
+  lazy val score: BigInt = {
     val multiplier = hash(account.publicKey ++ blockPuz)(byteNum)
-    if (multiplier >= 64) 0 else multiplier * multiplier * multiplier * multiplier * account.balance
+    if (multiplier >= 64) 0 else BigInt(multiplier).pow(8) * account.balance
   }
 }
 
