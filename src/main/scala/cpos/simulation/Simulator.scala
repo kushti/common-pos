@@ -19,13 +19,8 @@ class Simulator extends Actor with ActorLogging {
 
   val EndTime = 5000
 
-  //val MaxDelta = 10
-
   val MinersCount = 100
 
-  //val packetsLossPercentage = 1
-
-  //todo: pass delta?
   val miners = 1.to(100).toSeq.map(_ => context.system.actorOf(Props(classOf[Miner], self)))
 
   override def receive = {
