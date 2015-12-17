@@ -8,7 +8,7 @@ import cpos.model._
 import scala.collection.mutable
 import scala.util.Try
 
-class Miner(environment: ActorRef) extends Actor with ActorLogging {
+class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging {
 
   import MinerSpec._
   import TypesAndConstants._
@@ -21,7 +21,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
   val blockchain: BlockChain = mutable.Buffer[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
 
-  val acc = new Account(new SecureRandom().nextInt(1000000), pk)
+  val acc = new Account(balance, pk)
 
   lazy val id = pk.take(3).mkString("")
 
@@ -112,11 +112,13 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
         }
       }
 
-    case AnalyzeChain =>
-      val tickets:Seq[Ticket] = blockchain.drop(3).flatMap(b => Seq(b.ticket1, b.ticket2, b.ticket3))
+    case AnalyzeChain(total) =>
+      val chain = blockchain.drop(3)
+      val allTickets = chain.size * 3
+      val tickets:Seq[Ticket] = chain.flatMap(b => Seq(b.ticket1, b.ticket2, b.ticket3))
       //out balance -> number of tickets
       println(tickets.map(t => t.account -> t.score).groupBy(_._1).map{case (a, s)=>
-        a.balance -> s.map(_._2).size
+        a.balance/total.toDouble -> s.map(_._2).size.toDouble / allTickets
       }.toSeq.sortBy(_._1))
       context.system.terminate()
 
@@ -129,7 +131,7 @@ class Miner(environment: ActorRef) extends Actor with ActorLogging {
 
 object MinerSpec {
 
-  case object AnalyzeChain
+  case class AnalyzeChain(totalBalance: Int)
 
   case class TimerUpdate(time: Long)
 

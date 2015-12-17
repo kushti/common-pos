@@ -21,13 +21,15 @@ class Simulator extends Actor with ActorLogging {
 
   val MinersCount = 100
 
-  val miners = 1.to(100).toSeq.map(_ => context.system.actorOf(Props(classOf[Miner], self)))
+  val balances = (1 to MinersCount).toSeq
+  val miners = balances.map(balance => context.system.actorOf(Props(classOf[Miner], self, balance)))
 
   override def receive = {
     case NewTick =>
       time == EndTime match {
         case true =>
-          miners.head ! MinerSpec.AnalyzeChain
+          val total = balances.sum
+          miners.head ! MinerSpec.AnalyzeChain(total)
         case false =>
           time = time + 1
           log.info(s"Time $time, going to inform miners about clocks update")
