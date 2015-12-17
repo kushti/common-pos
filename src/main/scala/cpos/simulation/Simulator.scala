@@ -1,5 +1,7 @@
 package cpos.simulation
 
+import java.security.SecureRandom
+
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import cpos.actors.{Miner, MinerSpec}
 import cpos.model.{Block, Ticket}
@@ -21,7 +23,7 @@ class Simulator extends Actor with ActorLogging {
 
   val MinersCount = 100
 
-  val balances = (1 to MinersCount).toSeq
+  val balances = (1 to MinersCount).map(_ => new SecureRandom().nextInt(50000000)).toSeq
   val miners = balances.map(balance => context.system.actorOf(Props(classOf[Miner], self, balance)))
 
   override def receive = {
