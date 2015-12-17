@@ -10,8 +10,8 @@ sealed trait Ticket {
   val byteNum: Byte
 
   lazy val score: BigInt = {
-    val multiplier = hash(account.publicKey ++ blockPuz)(byteNum)
-    if (multiplier >= 64) 0 else BigInt(multiplier).pow(8) * account.balance
+    val m = java.lang.Byte.toUnsignedInt(hash(account.publicKey ++ blockPuz)(byteNum))
+    if (m >= 64) 0 else BigInt(m).pow(8) * account.balance
   }
 }
 
