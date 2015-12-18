@@ -19,7 +19,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
     bytes
   }
 
-  val blockchain: BlockChain = mutable.Buffer[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
+  var blockchain: BlockChain = mutable.Buffer[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
 
   val acc = new Account(balance, pk)
 
@@ -41,19 +41,19 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
     val ticket3Candidate = Ticket3(ticket3Block.puz, acc)
 
     if (ticket1Candidate.score > 0) {
-      // log.info(s"Generated ticket1: $ticket1Candidate")
+    //  log.info(s"Generated ticket1: $ticket1Candidate")
       ticket1s += ticket1Candidate
       environment ! ticket1Candidate
     }
 
     if (ticket2Candidate.score > 0) {
-      //    log.info(s"Generated ticket2: $ticket2Candidate")
+      //log.info(s"Generated ticket2: $ticket2Candidate")
       ticket2s += ticket2Candidate
       environment ! ticket2Candidate
     }
 
     if (ticket3Candidate.score > 0) {
-      //    log.info(s"Generated ticket3: $ticket3Candidate")
+      log.info(s"Generated ticket3: $ticket3Candidate")
       ticket3s += ticket3Candidate
       environment ! ticket3Candidate
       ownWinningTicket = Some(ticket3Candidate)
@@ -74,11 +74,15 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
     case t3: Ticket3 =>
       ticket3s += t3
-      if (t3.score > ownWinningTicket.map(_.score).getOrElse(0L)) {
+      if (t3.score > ownWinningTicket.map(_.score).getOrElse(0L) && t3.blockPuz.sameElements(blockchain.last.puz)){
         ownWinningTicket = None
       }
 
     case b: Block =>
+      if(blockchain.last.height == b.height && b.score >= blockchain.last.score) {
+        println("Duplicate resolving")
+        blockchain = blockchain.dropRight(1)
+      }
       blockchain += b
       ticket1s.clear()
       ticket2s.clear()
@@ -87,7 +91,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
     case TimerUpdate(time) =>
       val lastBlock = blockchain.last
-      if (time - lastBlock.time > 20 && ownWinningTicket.isDefined) {
+      if (time - lastBlock.time > 15 && ownWinningTicket.isDefined) {
         val t1Puz = blockchain(blockchain.size - 3).puz
         val t2Puz = blockchain(blockchain.size - 2).puz
 
@@ -114,14 +118,16 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
     case AnalyzeChain(total) =>
       val chain = blockchain.drop(3)
+      println("Blocks generated: " + chain.size)
       val allTickets = chain.size * 3
       val tickets:Seq[Ticket] = chain.flatMap(b => Seq(b.ticket1, b.ticket2, b.ticket3))
       //out balance -> number of tickets
-      println(tickets.map(t => t.account -> t.score).groupBy(_._1).map{case (a, s)=>
-        a.balance/total.toDouble -> s.map(_._2).size.toDouble / allTickets
-      }.toSeq.sortBy(_._1))
+      val stats = tickets.map(t => t.account -> t.score).groupBy(_._1).map{case (a, s)=>
+        100 * a.balance.toDouble / total -> 100 * s.map(_._2).size.toDouble / allTickets
+      }.toSeq.sortBy(_._1)
+      println("Accounts generated tickets: " + stats.size)
+      println(stats.mkString("\n"))
       context.system.terminate()
-
 
     case nonsense: Any =>
       log.warning(s"Got strange input: $nonsense")
@@ -131,7 +137,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
 object MinerSpec {
 
-  case class AnalyzeChain(totalBalance: Int)
+  case class AnalyzeChain(totalBalance: Long)
 
   case class TimerUpdate(time: Long)
 

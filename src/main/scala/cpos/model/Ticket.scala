@@ -9,10 +9,18 @@ sealed trait Ticket {
 
   val byteNum: Byte
 
+  /*
+    private def log2nlz(bits:Int) =
+      if( bits == 0 ) 0 else 31 - Integer.numberOfLeadingZeros( bits )
+    */
+
   lazy val score: BigInt = {
     val m = java.lang.Byte.toUnsignedInt(hash(account.publicKey ++ blockPuz)(byteNum))
-    if (m >= 64) 0 else BigInt(m).pow(8) * account.balance
+    val b = account.balance
+    if (m > 24) 0 else BigInt(b).pow(m)
   }
+
+  override def toString: String = s"Ticket$byteNum (score: $score) by $account"
 }
 
 

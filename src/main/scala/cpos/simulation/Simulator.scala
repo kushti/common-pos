@@ -19,9 +19,9 @@ class Simulator extends Actor with ActorLogging {
 
   var time = 0
 
-  val EndTime = 5000
+  val EndTime = 20000
 
-  val MinersCount = 100
+  val MinersCount = 300
 
   val balances = (1 to MinersCount).map(_ => new SecureRandom().nextInt(50000000)).toSeq
   val miners = balances.map(balance => context.system.actorOf(Props(classOf[Miner], self, balance)))
@@ -30,7 +30,7 @@ class Simulator extends Actor with ActorLogging {
     case NewTick =>
       time == EndTime match {
         case true =>
-          val total = balances.sum
+          val total = balances.map(_.toLong).sum
           miners.head ! MinerSpec.AnalyzeChain(total)
         case false =>
           time = time + 1
@@ -63,6 +63,6 @@ object SimulatorLauncher {
     val system = ActorSystem()
 
     val simulator = system.actorOf(Props[Simulator])
-    system.scheduler.schedule(0.seconds, 25.millis)(simulator ! NewTick)
+    system.scheduler.schedule(0.seconds, 50.millis)(simulator ! NewTick)
   }
 }
