@@ -51,9 +51,7 @@ class Simulator extends Actor with ActorLogging {
 }
 
 object SimulatorSpec {
-
   case object NewTick
-
 }
 
 
