@@ -4,6 +4,7 @@ import cpos.model.TypesAndConstants._
 import cpos.model._
 import probability_monad.Distribution
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.language.postfixOps
 import scala.util.Random
@@ -13,7 +14,7 @@ object FastSimulator extends App {
 
   val BlocksToGenerate = 5000
 
-  val MinersCount = 1000
+  val MinersCount = 700
 
   val balances = Distribution.exponential(50).sample(MinersCount).map(_ * 100000000).map(_.toInt)
 
@@ -25,37 +26,49 @@ object FastSimulator extends App {
 
   val blockchain: BlockChain = mutable.Buffer[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
 
-  def genTickets(blockchain: BlockChain, accounts: Seq[Account]):
+  def genTickets(blockchain: BlockChain):
   (Option[Ticket1], Option[Ticket2], Option[Ticket3]) = {
 
     val p1 = blockchain(blockchain.size - 3).puz
     val p2 = blockchain(blockchain.size - 2).puz
     val p3 = blockchain(blockchain.size - 1).puz
 
-    accs.foldLeft((None: Option[Ticket1], None: Option[Ticket2], None: Option[Ticket3])) {
-      case (bestTickets, acc) =>
-        val s1 = Ticket.score(p1, acc, 1)
-        val s2 = Ticket.score(p2, acc, 2)
-        val s3 = Ticket.score(p3, acc, 3)
+    @tailrec
+    def genStep(accounts: List[Account],
+                best1: Option[Ticket1],
+                best2: Option[Ticket2],
+                best3: Option[Ticket3]): (Option[Ticket1], Option[Ticket2], Option[Ticket3]) = {
 
-        val nt1 = if (s1 > 0 && s1 > bestTickets._1.map(_.score).getOrElse(0))
-          Some(Ticket1(p1, acc))
-        else bestTickets._1
+      accounts match {
+        case Nil => (best1, best2, best3)
+        case acc :: tl =>
+          val s1 = Ticket.score(p1, acc, 1)
+          val s2 = Ticket.score(p2, acc, 2)
+          val s3 = Ticket.score(p3, acc, 3)
 
-        val nt2 = if (s2 > 0 && s2 > bestTickets._2.map(_.score).getOrElse(0))
-          Some(Ticket2(p2, acc)) else bestTickets._2
+          val nt1 = if (s1 > 0 && s1 > best1.map(_.score).getOrElse(0))
+            Some(Ticket1(p1, acc))
+          else best1
 
-        val nt3 = if (s3 > 0 && s3 > bestTickets._3.map(_.score).getOrElse(0))
-          Some(Ticket3(p3, acc)) else bestTickets._3
+          val nt2 = if (s2 > 0 && s2 > best2.map(_.score).getOrElse(0))
+            Some(Ticket2(p2, acc))
+          else best2
 
-        (nt1, nt2, nt3)
+          val nt3 = if (s3 > 0 && s3 > best3.map(_.score).getOrElse(0))
+            Some(Ticket3(p3, acc))
+          else best3
+
+          genStep(tl, nt1, nt2, nt3)
+      }
     }
+
+    genStep(accs, None, None, None)
   }
 
   println("Big guys: " + balances.filter(_ > 10000000))
 
   for (i <- 1 until BlocksToGenerate optimized) {
-    val ts = genTickets(blockchain, accs)
+    val ts = genTickets(blockchain)
 
     val t1 = ts._1.get
     val t2 = ts._2.get
@@ -71,7 +84,7 @@ object FastSimulator extends App {
     println("Block generated: " + b)
     blockchain += b
 
-    if (blockchain.size % 50 == 0) System.gc()
+    if (blockchain.size % 20 == 0) System.gc()
   }
 
   val chain = blockchain.drop(3)
