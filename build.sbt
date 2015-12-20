@@ -9,7 +9,6 @@ licenses := Seq("Public domain / CC0" ->
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.4.1",
-  "com.chuusai" %% "shapeless" % "2.2.5",
+  "org.jliszka" %% "probability-monad" % "1.0.1",
   "com.github.nscala-time" %% "nscala-time" % "2.6.0"
 )
-    

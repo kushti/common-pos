@@ -116,9 +116,10 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
         }
       }
 
-    case AnalyzeChain(total) =>
+    case AnalyzeChain(balances, total) =>
       val chain = blockchain.drop(3)
       println("Blocks generated: " + chain.size)
+      println("balances:" + balances)
       val allTickets = chain.size * 3
       val tickets:Seq[Ticket] = chain.flatMap(b => Seq(b.ticket1, b.ticket2, b.ticket3))
       //out balance -> number of tickets
@@ -137,7 +138,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
 object MinerSpec {
 
-  case class AnalyzeChain(totalBalance: Long)
+  case class AnalyzeChain(balances:Seq[Int], totalBalance: Long)
 
   case class TimerUpdate(time: Long)
 

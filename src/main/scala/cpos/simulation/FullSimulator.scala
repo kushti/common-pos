@@ -1,11 +1,10 @@
 package cpos.simulation
 
-import java.security.SecureRandom
-
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import cpos.actors.{Miner, MinerSpec}
 import cpos.model.{Block, Ticket}
-import cpos.simulation.SimulatorSpec.NewTick
+import cpos.simulation.FullSimulatorSpec.NewTick
+import probability_monad.Distribution
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -13,17 +12,17 @@ import scala.concurrent.duration._
 trait Event
 
 
-class Simulator extends Actor with ActorLogging {
+class FullSimulator extends Actor with ActorLogging {
 
-  import SimulatorSpec._
+  import FullSimulatorSpec._
 
   var time = 0
 
-  val EndTime = 20000
+  val EndTime = 10000
 
-  val MinersCount = 300
+  val MinersCount = 2048
 
-  val balances = (1 to MinersCount).map(_ => new SecureRandom().nextInt(50000000)).toSeq
+  val balances = Distribution.exponential(50).sample(MinersCount).map(_ * 100000000).map(_.toInt)
   val miners = balances.map(balance => context.system.actorOf(Props(classOf[Miner], self, balance)))
 
   override def receive = {
@@ -31,7 +30,7 @@ class Simulator extends Actor with ActorLogging {
       time == EndTime match {
         case true =>
           val total = balances.map(_.toLong).sum
-          miners.head ! MinerSpec.AnalyzeChain(total)
+          miners.head ! MinerSpec.AnalyzeChain(balances, total)
         case false =>
           time = time + 1
           log.info(s"Time $time, going to inform miners about clocks update")
@@ -50,17 +49,19 @@ class Simulator extends Actor with ActorLogging {
   }
 }
 
-object SimulatorSpec {
+object FullSimulatorSpec {
   case object NewTick
 }
 
 
-object SimulatorLauncher {
+object FullSimulatorLauncher {
 
   def main(args: Array[String]): Unit = {
-    val system = ActorSystem()
 
-    val simulator = system.actorOf(Props[Simulator])
-    system.scheduler.schedule(0.seconds, 50.millis)(simulator ! NewTick)
+    //println(Distribution.exponential(50).sample(2048).map(_ * 100000000).map(_.toInt).filter(_ > 10000000))
+
+    val system = ActorSystem()
+    val simulator = system.actorOf(Props[FullSimulator])
+    system.scheduler.schedule(0.seconds, 300.millis)(simulator ! NewTick)
   }
 }

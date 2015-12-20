@@ -17,7 +17,7 @@ sealed trait Ticket {
   lazy val score: BigInt = {
     val m = java.lang.Byte.toUnsignedInt(hash(account.publicKey ++ blockPuz)(byteNum))
     val b = account.balance
-    if (m > 24) 0 else BigInt(b).pow(m)
+    if (m > 16) 0 else BigInt(b).pow(m)
   }
 
   override def toString: String = s"Ticket$byteNum (score: $score) by $account"
