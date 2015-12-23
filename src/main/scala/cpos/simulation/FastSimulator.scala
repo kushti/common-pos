@@ -1,43 +1,100 @@
 package cpos.simulation
 
-import cpos.model.TypesAndConstants._
+import java.io._
+
 import cpos.model._
+import org.mapdb.{Atomic, DBMaker, HTreeMap}
 import probability_monad.Distribution
 
-import scala.collection.mutable
+import scala.collection.JavaConversions._
 import scala.language.postfixOps
 import scala.util.Random
 import scalaxy.loops._
 
-object FastSimulator extends App {
+case class BlockchainState(blockchain: HTreeMap[Int, Block],
+                           height: Atomic.Integer,
+                           accounts: java.util.Set[Account])
 
-  val BlocksToGenerate = 5000
+object FastSimulator extends App {
 
   val MinersCount = 800
 
-  val balances = Distribution.exponential(50).sample(MinersCount).map(_ * 100000000).map(_.toInt)
+  val file = new File(s"blockchain.db")
 
-  val accs = balances.map { b =>
-    val pk = new Array[Byte](32)
-    Random.nextBytes(pk)
-    Account(b, pk)
-  }.toIndexedSeq
+  val db = DBMaker.newFileDB(file).mmapFileEnableIfSupported().closeOnJvmShutdown().checksumEnable().make()
 
-  val blockchain: BlockChain = mutable.Buffer[Block](new GenesisBlock(1), new GenesisBlock(2), new GenesisBlock(3))
+  val normalState = BlockchainState(
+    db.createHashMap(s"blockchain-$MinersCount-normal").makeOrGet[Int, Block](),
+    db.getAtomicInteger(s"height-$MinersCount-normal"),
+    db.createHashSet(s"accounts-$MinersCount-normal").makeOrGet[Account]()
+  )
 
-  def genTickets(blockchain: BlockChain):
+  val attackerState = BlockchainState(
+    db.createHashMap(s"blockchain-$MinersCount-miners-attacker").makeOrGet[Int, Block](),
+    db.getAtomicInteger(s"height-$MinersCount-attacker"),
+    db.createHashSet(s"accounts-$MinersCount-attacker").makeOrGet[Account]()
+  )
+
+  def appendBlock(state: BlockchainState, block: Block): Unit = {
+    val h = block.height
+    state.blockchain.put(h, block)
+    state.height.set(h)
+    db.commit()
+  }
+
+  def blockAt(state: BlockchainState, h: Int): Block = state.blockchain.get(h)
+
+  def last(state: BlockchainState) = blockAt(state, state.height.get())
+
+  def height(state: BlockchainState): Int = state.height.get()
+
+  def empty(state: BlockchainState): Boolean = height(state) == 0
+
+  if (empty(normalState)) {
+    appendBlock(normalState, new GenesisBlock(1))
+    appendBlock(normalState, new GenesisBlock(2))
+    appendBlock(normalState, new GenesisBlock(3))
+
+    val balances = Distribution.exponential(50).sample(MinersCount).map(_ * 100000000).map(_.toInt)
+
+    balances.foreach { b =>
+      val pk = new Array[Byte](32)
+      Random.nextBytes(pk)
+      normalState.accounts.add(Account(b, pk))
+    }
+
+    println("Big guys: " + balances.filter(_ > 10000000))
+  }
+
+  if (empty(attackerState)) {
+    appendBlock(attackerState, new GenesisBlock(1))
+    appendBlock(attackerState, new GenesisBlock(2))
+    appendBlock(attackerState, new GenesisBlock(3))
+
+    //1,674,545,171
+    1 to 500 foreach{_ =>
+      val balance = 1000000
+      val pk = new Array[Byte](32)
+      Random.nextBytes(pk)
+      attackerState.accounts.add(Account(balance, pk))
+    }
+  }
+
+  def genTickets(blockchainState: BlockchainState, accounts: IndexedSeq[Account]):
   (Option[Ticket1], Option[Ticket2], Option[Ticket3]) = {
 
-    val p1 = blockchain(blockchain.size - 3).puz
-    val p2 = blockchain(blockchain.size - 2).puz
-    val p3 = blockchain(blockchain.size - 1).puz
+    val h = height(blockchainState)
+
+    val p1 = blockAt(blockchainState, h - 2).puz
+    val p2 = blockAt(blockchainState, h - 1).puz
+    val p3 = blockAt(blockchainState, h).puz
 
     var best1: Option[Ticket1] = None
     var best2: Option[Ticket2] = None
     var best3: Option[Ticket3] = None
 
-    for(i <- accs.indices optimized){
-      val acc = accs(i)
+    for (i <- accounts.indices optimized) {
+      val acc = accounts(i)
 
       val s1 = Ticket.score(p1, acc, 1)
       val s2 = Ticket.score(p2, acc, 2)
@@ -51,27 +108,44 @@ object FastSimulator extends App {
     (best1, best2, best3)
   }
 
-  println("Big guys: " + balances.filter(_ > 10000000))
+  def generateBlocks(blockchainState: BlockchainState, howMany: Int): Unit = {
 
-  for (i <- 1 until BlocksToGenerate optimized) {
-    val ts = genTickets(blockchain)
+    val accounts: IndexedSeq[Account] = blockchainState.accounts.toIndexedSeq
 
-    val t1 = ts._1.get
-    val t2 = ts._2.get
-    val t3 = ts._3.get
+    println("total stake: "+accounts.map(_.balance.toLong).sum) // 1,674,545,171
 
-    val newPuz =
-      blockchain.last.puz ++
-        t1.account.publicKey ++
-        t2.account.publicKey ++
-        t3.account.publicKey
+    for (i <- 1 until BlocksToGenerate optimized) {
+      val ts = genTickets(blockchainState, accounts)
 
-    val b = Block(blockchain.size + 1, blockchain.last.time + 15, newPuz, t1, t2, t3, t1.account)
-    println("Block generated: " + b)
-    blockchain += b
+      val t1 = ts._1.get
+      val t2 = ts._2.get
+      val t3 = ts._3.get
 
-    if (blockchain.size % 10 == 0) System.gc()
+      val lastBlock = last(blockchainState)
+
+      val newPuz =
+        lastBlock.puz ++
+          t1.account.publicKey ++
+          t2.account.publicKey ++
+          t3.account.publicKey
+
+      val b = Block(lastBlock.height + 1, lastBlock.time + 15, newPuz, t1, t2, t3, t1.account)
+      println("Block generated: " + b)
+      appendBlock(blockchainState, b)
+
+      if (height(blockchainState) % 10 == 0) System.gc()
+    }
   }
+
+
+  val BlocksToGenerate = 100
+  generateBlocks(normalState, 100)
+  generateBlocks(attackerState, 100)
+
+  println("normal:" + normalState.blockchain.map(_._2.score).sum)
+  println("attack:" + attackerState.blockchain.map(_._2.score).sum)
+
+  /*
 
   val chain = blockchain.drop(3)
   val total = balances.map(_.toLong).sum
@@ -87,4 +161,6 @@ object FastSimulator extends App {
   }.toSeq.sortBy(_._1)
   println("Accounts generated tickets: " + stats.size)
   println(stats.mkString("\n"))
+
+  */
 }

@@ -41,7 +41,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
     val ticket3Candidate = Ticket3(ticket3Block.puz, acc)
 
     if (ticket1Candidate.score > 0) {
-    //  log.info(s"Generated ticket1: $ticket1Candidate")
+      //  log.info(s"Generated ticket1: $ticket1Candidate")
       ticket1s += ticket1Candidate
       environment ! ticket1Candidate
     }
@@ -74,12 +74,12 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
     case t3: Ticket3 =>
       ticket3s += t3
-      if (t3.score > ownWinningTicket.map(_.score).getOrElse(0L) && t3.blockPuz.sameElements(blockchain.last.puz)){
+      if (t3.score > ownWinningTicket.map(_.score).getOrElse(0L) && t3.blockPuz.sameElements(blockchain.last.puz)) {
         ownWinningTicket = None
       }
 
     case b: Block =>
-      if(blockchain.last.height == b.height && b.score >= blockchain.last.score) {
+      if (blockchain.last.height == b.height && b.score >= blockchain.last.score) {
         println("Duplicate resolving")
         blockchain = blockchain.dropRight(1)
       }
@@ -99,7 +99,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
         val t2Opt = Try(ticket2s.filter(_.blockPuz.sameElements(t2Puz)).maxBy(_.score)).toOption
 
         (t1Opt, t2Opt) match {
-          case (Some(t1), Some(t2)) =>
+          case (Some(t1: Ticket1), Some(t2: Ticket2)) =>
 
             val newPuz =
               lastBlock.puz ++
@@ -121,9 +121,9 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
       println("Blocks generated: " + chain.size)
       println("balances:" + balances)
       val allTickets = chain.size * 3
-      val tickets:Seq[Ticket] = chain.flatMap(b => Seq(b.ticket1, b.ticket2, b.ticket3))
+      val tickets: Seq[Ticket] = chain.flatMap(b => Seq(b.ticket1, b.ticket2, b.ticket3))
       //out balance -> number of tickets
-      val stats = tickets.map(t => t.account -> t.score).groupBy(_._1).map{case (a, s)=>
+      val stats = tickets.map(t => t.account -> t.score).groupBy(_._1).map { case (a, s) =>
         100 * a.balance.toDouble / total -> 100 * s.map(_._2).size.toDouble / allTickets
       }.toSeq.sortBy(_._1)
       println("Accounts generated tickets: " + stats.size)
@@ -138,7 +138,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
 object MinerSpec {
 
-  case class AnalyzeChain(balances:Seq[Int], totalBalance: Long)
+  case class AnalyzeChain(balances: Seq[Int], totalBalance: Long)
 
   case class TimerUpdate(time: Long)
 
