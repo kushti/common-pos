@@ -16,7 +16,7 @@ sealed trait Ticket {
 
   lazy val score: BigInt = Ticket.score(blockPuz, account, byteNum)
 
-  override def toString: String = s"Ticket$byteNum (score: $score) by $account"
+  override def toString: String = s"Ticket$byteNum (score: $score) by ${account.publicKey.take(3).mkString("")}"
 }
 
 object Ticket{

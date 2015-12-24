@@ -2,6 +2,8 @@ package cpos.model
 
 import cpos.model.TypesAndConstants._
 
+import scala.util.Random
+
 //todo: add signatures?
 case class Block(height: Int,
                  time: Time,
@@ -15,18 +17,18 @@ case class Block(height: Int,
 
 object GenesisCreator extends Account(0, Array.fill(PubKeyLength)(0))
 
-object GenesisTicket1 extends Ticket1(Array.fill(SeedLength)(0), GenesisCreator)
-
-object GenesisTicket2 extends Ticket2(Array.fill(SeedLength)(0), GenesisCreator)
-
-object GenesisTicket3 extends Ticket3(Array.fill(SeedLength)(0), GenesisCreator)
-
 class GenesisBlock(override val height: Int) extends Block(
   height,
   0L,
-  seed = Array.fill(SeedLength)(0),
-  ticket1 = GenesisTicket1,
-  ticket2 = GenesisTicket2,
-  ticket3 = GenesisTicket3,
+  seed = Array.fill(SeedLength)(Random.nextInt(255).toByte),
+  ticket1 = GenesisBlock.genesisTicket1(),
+  ticket2 = GenesisBlock.genesisTicket2(),
+  ticket3 = GenesisBlock.genesisTicket3(),
   generator = GenesisCreator
 )
+
+object GenesisBlock{
+  def genesisTicket1() = Ticket1(Array.fill(SeedLength)(Random.nextInt(255).toByte), GenesisCreator)
+  def genesisTicket2() = Ticket2(Array.fill(SeedLength)(Random.nextInt(255).toByte), GenesisCreator)
+  def genesisTicket3() = Ticket3(Array.fill(SeedLength)(Random.nextInt(255).toByte), GenesisCreator)
+}
