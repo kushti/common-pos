@@ -8,6 +8,6 @@ object TypesAndConstants{
 
   type BlockChain = scala.collection.mutable.Buffer[Block]
 
-  val PuzLength = HashImpl.DigestSize
+  val SeedLength = HashImpl.DigestSize
   val PubKeyLength = 32
 }

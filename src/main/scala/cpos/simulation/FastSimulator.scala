@@ -21,7 +21,8 @@ object FastSimulator extends App {
 
   val file = new File(s"blockchain.db")
 
-  val db = DBMaker.newFileDB(file).mmapFileEnableIfSupported().closeOnJvmShutdown().checksumEnable().make()
+  //.mmapFileEnableIfSupported()
+  val db = DBMaker.newMemoryDB().closeOnJvmShutdown().checksumEnable().make()
 
   val normalState = BlockchainState(
     db.createHashMap(s"blockchain-$MinersCount-normal").makeOrGet[Int, Block](),
@@ -71,9 +72,17 @@ object FastSimulator extends App {
     appendBlock(attackerState, new GenesisBlock(2))
     appendBlock(attackerState, new GenesisBlock(3))
 
+    val total = normalState.accounts.map(_.balance).sum
+
+    val attackerPercent = 25
+    val attackerBalance = ((total*attackerPercent.toLong)/100).toInt
+
+    println("Attacker balance: " + attackerBalance)
+
+    val k = 64
     //1,674,545,171
-    1 to 500 foreach{_ =>
-      val balance = 1000000
+    1 to k foreach {_ =>
+      val balance = attackerBalance / k
       val pk = new Array[Byte](32)
       Random.nextBytes(pk)
       attackerState.accounts.add(Account(balance, pk))
@@ -85,9 +94,9 @@ object FastSimulator extends App {
 
     val h = height(blockchainState)
 
-    val p1 = blockAt(blockchainState, h - 2).puz
-    val p2 = blockAt(blockchainState, h - 1).puz
-    val p3 = blockAt(blockchainState, h).puz
+    val p1 = blockAt(blockchainState, h - 2).seed
+    val p2 = blockAt(blockchainState, h - 1).seed
+    val p3 = blockAt(blockchainState, h).seed
 
     var best1: Option[Ticket1] = None
     var best2: Option[Ticket2] = None
@@ -114,7 +123,7 @@ object FastSimulator extends App {
 
     println("total stake: "+accounts.map(_.balance.toLong).sum) // 1,674,545,171
 
-    for (i <- 1 until BlocksToGenerate optimized) {
+    for (i <- 1 until howMany optimized) {
       val ts = genTickets(blockchainState, accounts)
 
       val t1 = ts._1.get
@@ -124,7 +133,7 @@ object FastSimulator extends App {
       val lastBlock = last(blockchainState)
 
       val newPuz =
-        lastBlock.puz ++
+        lastBlock.seed ++
           t1.account.publicKey ++
           t2.account.publicKey ++
           t3.account.publicKey
@@ -138,12 +147,18 @@ object FastSimulator extends App {
   }
 
 
-  val BlocksToGenerate = 100
-  generateBlocks(normalState, 100)
-  generateBlocks(attackerState, 100)
+  val BlocksToGenerate = 5
+  generateBlocks(normalState, BlocksToGenerate)
+  generateBlocks(attackerState, BlocksToGenerate)
 
-  println("normal:" + normalState.blockchain.map(_._2.score).sum)
-  println("attack:" + attackerState.blockchain.map(_._2.score).sum)
+  val normalScore = normalState.blockchain.map(_._2.score).sum
+  val attackerScore = attackerState.blockchain.map(_._2.score).sum
+
+  println("normal:" + normalScore)
+  println("attack:" + attackerScore)
+  val fs = attackerState.blockchain.head._2.score
+  println("same:" + attackerState.blockchain.map(_._2.score).forall(_ == fs))
+  println("success: " + (attackerScore > normalScore))
 
   /*
 

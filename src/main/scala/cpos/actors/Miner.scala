@@ -36,9 +36,9 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
     val ticket2Block = blockchain(blockchain.size - 2)
     val ticket3Block = blockchain.last
 
-    val ticket1Candidate = Ticket1(ticket1Block.puz, acc)
-    val ticket2Candidate = Ticket2(ticket2Block.puz, acc)
-    val ticket3Candidate = Ticket3(ticket3Block.puz, acc)
+    val ticket1Candidate = Ticket1(ticket1Block.seed, acc)
+    val ticket2Candidate = Ticket2(ticket2Block.seed, acc)
+    val ticket3Candidate = Ticket3(ticket3Block.seed, acc)
 
     if (ticket1Candidate.score > 0) {
       //  log.info(s"Generated ticket1: $ticket1Candidate")
@@ -74,7 +74,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
 
     case t3: Ticket3 =>
       ticket3s += t3
-      if (t3.score > ownWinningTicket.map(_.score).getOrElse(0L) && t3.blockPuz.sameElements(blockchain.last.puz)) {
+      if (t3.score > ownWinningTicket.map(_.score).getOrElse(0L) && t3.blockPuz.sameElements(blockchain.last.seed)) {
         ownWinningTicket = None
       }
 
@@ -92,8 +92,8 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
     case TimerUpdate(time) =>
       val lastBlock = blockchain.last
       if (time - lastBlock.time > 15 && ownWinningTicket.isDefined) {
-        val t1Puz = blockchain(blockchain.size - 3).puz
-        val t2Puz = blockchain(blockchain.size - 2).puz
+        val t1Puz = blockchain(blockchain.size - 3).seed
+        val t2Puz = blockchain(blockchain.size - 2).seed
 
         val t1Opt = Try(ticket1s.filter(_.blockPuz.sameElements(t1Puz)).maxBy(_.score)).toOption
         val t2Opt = Try(ticket2s.filter(_.blockPuz.sameElements(t2Puz)).maxBy(_.score)).toOption
@@ -102,7 +102,7 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
           case (Some(t1: Ticket1), Some(t2: Ticket2)) =>
 
             val newPuz =
-              lastBlock.puz ++
+              lastBlock.seed ++
                 t1.account.publicKey ++
                 t2.account.publicKey ++
                 ownWinningTicket.get.account.publicKey
