@@ -23,7 +23,7 @@ object BlockchainState {
   val file = new File(s"blockchain.db")
 
   //.mmapFileEnableIfSupported()
-  val db = DBMaker.newMemoryDirectDB().closeOnJvmShutdown().checksumEnable().make()
+  val db = DBMaker.newMemoryDB().closeOnJvmShutdown().checksumEnable().make()
 
   def appendBlock(state: BlockchainState, block: Block): Unit = {
     val h = block.height
@@ -81,22 +81,21 @@ object FastSimulator extends App {
       normalState.accounts.add(Account(b, pk))
     }
 
-    println("Big guys: " + balances.filter(_ > 10000000))
+    // println("Big guys: " + balances.filter(_ > 10000000))
 
     normalState
   }
 
-  def generateAttackerState(normalState: BlockchainState) = {
+  def generateAttackerState(normalState: BlockchainState, attackerPercent: Int, accountsNum: Int) = {
     val attackerState = BlockchainState.create()
 
     val total = normalState.accounts.map(_.balance).sum
 
-    val attackerPercent = 30
     val attackerBalance = ((total * attackerPercent.toLong) / 100).toInt
 
-    println("Attacker balance: " + attackerBalance)
+    //println("Attacker balance: " + attackerBalance)
 
-    val k = 64
+    val k = accountsNum
     //1,674,545,171
     1 to k foreach { _ =>
       val balance = attackerBalance / k
@@ -120,16 +119,22 @@ object FastSimulator extends App {
     var best2: Option[Ticket2] = None
     var best3: Option[Ticket3] = None
 
+    val filterAccs = blockchainState.blockchain.takeRight(10).values.flatMap { b =>
+      Seq(b.ticket1.account, b.ticket2.account, b.ticket3.account)
+    }
+
     for (i <- accounts.indices optimized) {
       val acc = accounts(i)
 
-      val s1 = Ticket.score(p1, acc, 1)
-      val s2 = Ticket.score(p2, acc, 2)
-      val s3 = Ticket.score(p3, acc, 3)
+      if (!filterAccs.contains(acc)) {
+        val s1 = Ticket.score(p1, acc, 1)
+        val s2 = Ticket.score(p2, acc, 2)
+        val s3 = Ticket.score(p3, acc, 3)
 
-      if (s1 > 0 && s1 > best1.map(_.score).getOrElse(0)) best1 = Some(Ticket1(p1, acc))
-      if (s2 > 0 && s2 > best2.map(_.score).getOrElse(0)) best2 = Some(Ticket2(p2, acc))
-      if (s3 > 0 && s3 > best3.map(_.score).getOrElse(0)) best3 = Some(Ticket3(p3, acc))
+        if (s1 > 0 && s1 > best1.map(_.score).getOrElse(0)) best1 = Some(Ticket1(p1, acc))
+        if (s2 > 0 && s2 > best2.map(_.score).getOrElse(0)) best2 = Some(Ticket2(p2, acc))
+        if (s3 > 0 && s3 > best3.map(_.score).getOrElse(0)) best3 = Some(Ticket3(p3, acc))
+      }
     }
 
     (best1, best2, best3)
@@ -139,9 +144,6 @@ object FastSimulator extends App {
 
     val accounts: IndexedSeq[Account] = blockchainState.accounts.toIndexedSeq
 
-    //  println(blockchainState.blockchain.size())
-
-    //println("total stake: " + accounts.map(_.balance.toLong).sum) // 1,674,545,171
 
     for (i <- 1 until howMany + 1 optimized) {
       val ts = genTickets(blockchainState, accounts)
@@ -167,28 +169,30 @@ object FastSimulator extends App {
     }
   }
 
+  val BlocksToGenerate = 60
+  val attackerPercent = 40
+  val attackerAccounts = 90
 
-  val BlocksToGenerate = 2
-
-  val as = (1 to 1 map { _ =>
+  val as = (1 to 30 map { _ =>
     Try {
       val normalState = generateNormalState()
 
       generateBlocks(normalState, BlocksToGenerate).ensuring(normalState.blockchain.size() == 3 + BlocksToGenerate)
       val normalScore = normalState.blockchain.map(_._2.score).sum
 
-      val attackerState = generateAttackerState(normalState)
+      val attackerState = generateAttackerState(normalState, attackerPercent, attackerAccounts)
       generateBlocks(attackerState, BlocksToGenerate).ensuring(normalState.blockchain.size() == 3 + BlocksToGenerate)
       val attackerScore = attackerState.blockchain.map(_._2.score).sum
 
 
       println("normal:" + normalScore)
       println("attack:" + attackerScore)
-      attackerState.blockchain.map(_._2).foreach{b =>
+
+      /*attackerState.blockchain.map(_._2).foreach { b =>
         println(b.ticket1)
         println(b.ticket2)
         println(b.ticket3)
-      }
+      }*/
 
 
       BlockchainState.delete(attackerState)
