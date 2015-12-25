@@ -171,7 +171,7 @@ object FastSimulator extends App {
 
   val BlocksToGenerate = 60
   val attackerPercent = 40
-  val attackerAccounts = 90
+  val attackerAccounts = 96
 
   val as = (1 to 30 map { _ =>
     Try {
