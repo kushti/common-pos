@@ -4,6 +4,7 @@ import java.security.SecureRandom
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import cpos.model._
+import cpos.util.HashImpl
 
 import scala.collection.mutable
 import scala.util.Try
@@ -102,10 +103,10 @@ class Miner(environment: ActorRef, balance: Int) extends Actor with ActorLogging
           case (Some(t1: Ticket1), Some(t2: Ticket2)) =>
 
             val newPuz =
-              lastBlock.seed ++
+              HashImpl.hash(lastBlock.seed ++
                 t1.account.publicKey ++
                 t2.account.publicKey ++
-                ownWinningTicket.get.account.publicKey
+                ownWinningTicket.get.account.publicKey)
 
             val newBlock = Block(lastBlock.height + 1, time, newPuz, t1, t2, ownWinningTicket.get, acc)
             environment ! newBlock
