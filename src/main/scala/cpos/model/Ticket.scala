@@ -23,7 +23,7 @@ object Ticket{
   def score(blockPuz: Array[Byte], account: Account, byteNum: Byte):BigInt = {
     val m = java.lang.Byte.toUnsignedInt(hash(account.publicKey ++ blockPuz)(byteNum))
     val b = account.balance
-    if (m > 16) 0 else BigInt(b).pow(m)
+    if (m > 16) 0 else BigInt(b).bitLength * m
   }
 }
 
