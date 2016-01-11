@@ -105,13 +105,13 @@ object NxtSimulator extends App {
 
 
   val BlocksToGenerate = 10
-  val Experiments = 10000
+  val Experiments = 1000
 
   val c = ((1 to Experiments) map {_ :Int =>
     val ns = generateNormalState()
     val cn = cumdef(generateBlocks(ns, BlocksToGenerate))
 
-    val as = generateAttackerState(ns, 40, 20)
+    val as = generateAttackerState(ns, 50, 24)
     val ca = cumdef(generateBlocks(as, BlocksToGenerate))
     println("normal cd: " + cn)
     println("attack cd: " + ca)
